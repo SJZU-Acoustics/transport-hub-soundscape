@@ -20,7 +20,7 @@ R code for reproducing the statistical analyses, figures and tables for the manu
 The analysis reads a single input: the Mendeley Data workbook
 `P34_transport_hub_soundscape_data.xlsx`.
 
-1. Download it from Mendeley Data (CC BY 4.0) — see the manuscript's data-availability statement for the DOI.
+1. Download it from Mendeley Data, **DOI [10.17632/jyzgj67fjb](https://doi.org/10.17632/jyzgj67fjb)** (CC BY 4.0).
 2. Place the `.xlsx` file in the `data/` folder (see `data/README.md`).
 
 The workbook holds the analysis-ready chain of the listening experiment: the 2,116 observation-level ratings of 36 transport-hub recordings by 59 listeners on the eight ISO/TS 12913-2 attributes with their ISO-P/ISO-E coordinates, the participant roster, the 36-recording table of 24 ArtemiS acoustic indicators across the energy, psychoacoustic and temporal layers, the one-second indicator series, and the sound-source pick counts and shares with their three-class aggregation.
@@ -74,4 +74,4 @@ Workbook cells are capped at 15 significant digits, so the unrounded full-precis
 
 ## License
 
-Code in this repository is released under the MIT License (see `LICENSE`). The input data are archived separately under CC BY 4.0 at Mendeley Data.
+Code in this repository is released under the MIT License (see `LICENSE`). The input data are archived separately under CC BY 4.0 at Mendeley Data (DOI as above).

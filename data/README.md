@@ -2,8 +2,8 @@
 
 ## The Mendeley Data workbook (required)
 
-Download `P34_transport_hub_soundscape_data.xlsx` from Mendeley Data (CC BY 4.0; the DOI
-is given in the manuscript's data-availability statement) and place it in **this folder**:
+Download `P34_transport_hub_soundscape_data.xlsx` from Mendeley Data —
+**DOI [10.17632/jyzgj67fjb](https://doi.org/10.17632/jyzgj67fjb)** (CC BY 4.0) — and place it in **this folder**:
 
 ```
 data/P34_transport_hub_soundscape_data.xlsx

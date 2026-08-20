@@ -132,11 +132,12 @@ f1 <- ggplot() + xlim(0, 100) + ylim(0, 62) + theme_void() +
              'italic(L)[plain("A10")]-italic(L)[plain("A90")]*" (+)"'),
       size = 2.3, parse = TRUE) +
   txt(82.2, 8.8, "functional-sound share (-)", size = 2.3) +
-  # arrows layers -> outcomes
+  # arrows layers -> outcomes (one per layer x dimension with a significant driver)
   arr(34, 66, 38.5, 36.5) +
   arr(34, 66, 28, 33) +
   arr(34, 66, 26, 13.5) +
   arr(34, 66, 17.5, 11.5) +
+  arr(34, 66, 9, 28.5) +
   arr(34, 66, 7, 9) +
   # crossed random intercepts note
   box(38, 62, 20.5, 26.5, fill = "grey93", lwd = 0.35) +

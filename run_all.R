@@ -7,7 +7,7 @@
 # Reads   data/P34_transport_hub_soundscape_data.xlsx
 # Writes  output/<analysis id>/  one folder per analysis module
 #         output/figures/        Figs. 1-5 and Supplementary Figs. S1-S2 (PNG)
-#         output/tables/         Tables 1-3 and Supplementary Tables S1-S11
+#         output/tables/         Tables 1-3 and Supplementary Tables S1-S15
 # =============================================================================
 
 options(warn = 1)
@@ -17,8 +17,9 @@ if (!file.exists(file.path("code", "helpers.R"))) {
   stop("Run this script from the repository root: Rscript run_all.R", call. = FALSE)
 }
 
-# Analysis modules. Each is self-contained: it reads the deposited tables and
-# writes its own result tables, so the order below is for readability only.
+# Analysis modules. Each reads the deposited tables and writes its own result
+# tables. A18 and A19 additionally read result tables of A12, A14 and A15, so
+# those must run first; otherwise the order is for readability only.
 MODULES <- c(
   "a01_descriptives",
   "a02_reliability",
@@ -29,7 +30,10 @@ MODULES <- c(
   "a12_exhaustive_selection",
   "a13_dimension_unpacking",
   "a14_moderation_nonlinearity",
-  "a15_predictive_validity"
+  "a15_predictive_validity",
+  "a17_source_sensitivity",
+  "a18_validation_sensitivity",
+  "a19_uncertainty"
 )
 
 for (module in MODULES) {

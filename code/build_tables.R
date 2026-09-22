@@ -1,5 +1,5 @@
 # =============================================================================
-# LaTeX table fragments: Tables 1-3 and Supplementary Tables S1-S11.
+# LaTeX table fragments: Tables 1-3 and Supplementary Tables S1-S15.
 # Each fragment is a bare tabular (booktabs); captions and table environments
 # live in the manuscript source.
 # Inputs: the deposited data tables + the analysis modules' result tables.
@@ -141,16 +141,23 @@ f_isop <- OUTC("a11_adopted_models", "table10_adopted_isop_fixed_reml.csv")
 f_isoe <- OUTC("a11_adopted_models", "table12_adopted_isoe_fixed_reml.csv")
 vc <- OUTC("a11_adopted_models", "table13_adopted_reml_to_reml.csv")
 r2a <- OUTC("a11_adopted_models", "nakagawa_r2_adopted.csv")
+# Revision 1: Satterthwaite t intervals of the adopted REML coefficients (A19).
+fci <- OUTC("a19_uncertainty", "fixed_effect_intervals.csv")
+ci_tex <- function(lo, hi, fmt = "%.4f")
+  sprintf("[%s, %s]", fnum(fmt, lo), fnum(fmt, hi))
 r2row <- function(oc) {
   d <- r2a %>% filter(model == ifelse(oc == "ISOP", "ISOP main", "ISOE main (adopted)"))
-  sprintf("Nakagawa $R^2$ (marginal / conditional) & \\multicolumn{5}{l}{%.1f\\%% / %.1f\\%%} \\\\",
+  sprintf("Nakagawa $R^2$ (marginal / conditional) & \\multicolumn{6}{l}{%.1f\\%% / %.1f\\%%} \\\\",
           d$marginal_pct[1], d$conditional_pct[1])
 }
-frow <- function(d) {
+frow <- function(d, oc) {
   apply(d, 1, function(r) {
-    sprintf("%s & %s & %.4f & %.1f & %s & %s \\\\",
+    ci <- fci %>% filter(outcome == oc, term == r[["Term"]])
+    # the A11 table stores B rounded to four decimals
+    stopifnot(nrow(ci) == 1, abs(ci$B - as.numeric(r["B"])) < 6e-5)
+    sprintf("%s & %s & %.4f & %s & %.1f & %s & %s \\\\",
             TERM_TEX[r[["Term"]]], fnum("%.4f", as.numeric(r["B"])),
-            as.numeric(r["SE"]), as.numeric(r["df"]),
+            as.numeric(r["SE"]), ci_tex(ci$lo, ci$hi), as.numeric(r["df"]),
             fnum("%.2f", as.numeric(r["t"])), fp(as.numeric(r["p"])))
   })
 }
@@ -160,28 +167,28 @@ vrow <- function(oc) {
     red <- as.numeric(r["Reduction_pct"])
     chg <- if (abs(red) < 0.15) "0\\%" else if (red > 0)
       sprintf("$-$%.1f\\%%", red) else sprintf("$+$%.1f\\%%", -red)
-    sprintf("%s variance & %.4f & %.4f & \\multicolumn{2}{c}{%s} & \\\\",
+    sprintf("%s variance & %.4f & %.4f & \\multicolumn{2}{c}{%s} & & \\\\",
             recode(r[["Component"]], Subject = "Listener",
                    Stimulus = "Recording", Residual = "Residual"),
             as.numeric(r["Baseline_REML"]), as.numeric(r["Final_REML"]), chg)
   })
 }
 tab3 <- c(
-  "\\begin{tabular}{lccccc}", "\\toprule",
-  "Term & $B$ & SE & df & $t$ & $p$ \\\\",
+  "\\begin{tabular}{lcccccc}", "\\toprule",
+  "Term & $B$ & SE & 95\\% CI & df & $t$ & $p$ \\\\",
   "\\midrule",
-  "\\multicolumn{6}{l}{\\emph{ISOP: $L_{\\mathrm{Aeq}}$ $+$ $T_{50}$ $+$ Type 2 natural-and-music share}} \\\\",
-  frow(f_isop),
+  "\\multicolumn{7}{l}{\\emph{ISOP: $L_{\\mathrm{Aeq}}$ $+$ $T_{50}$ $+$ Type 2 natural-and-music share}} \\\\",
+  frow(f_isop, "ISOP"),
   "\\addlinespace",
-  "\\multicolumn{6}{l}{\\emph{ISOE: $L_{\\mathrm{Ceq}}-L_{\\mathrm{Aeq}}$ $+$ $T_{50}$ $+$ $\\mathrm{AI}_{50}$ $+$ $L_{\\mathrm{A10}}-L_{\\mathrm{A90}}$ $+$ Type 1 share}} \\\\",
-  frow(f_isoe),
+  "\\multicolumn{7}{l}{\\emph{ISOE: $L_{\\mathrm{Ceq}}-L_{\\mathrm{Aeq}}$ $+$ $T_{50}$ $+$ $\\mathrm{AI}_{50}$ $+$ $L_{\\mathrm{A10}}-L_{\\mathrm{A90}}$ $+$ Type 1 share}} \\\\",
+  frow(f_isoe, "ISOE"),
   "\\midrule",
-  " & Null & Final & \\multicolumn{2}{c}{Change} & \\\\",
-  "\\multicolumn{6}{l}{\\emph{ISOP random-effect variances (REML)}} \\\\",
+  " & Null & Final & \\multicolumn{2}{c}{Change} & & \\\\",
+  "\\multicolumn{7}{l}{\\emph{ISOP random-effect variances (REML)}} \\\\",
   vrow("ISOP"),
   r2row("ISOP"),
   "\\addlinespace",
-  "\\multicolumn{6}{l}{\\emph{ISOE random-effect variances (REML)}} \\\\",
+  "\\multicolumn{7}{l}{\\emph{ISOE random-effect variances (REML)}} \\\\",
   vrow("ISOE"),
   r2row("ISOE"),
   "\\bottomrule", "\\end{tabular}")
@@ -296,17 +303,23 @@ wtab(si4, "si_anova.tex")
 
 # --- S: null models -----------------------------------------------------------
 nm <- OUTC("a05_null_models", "table08_null_models.csv")
+# Revision 1: parametric-bootstrap percentile intervals of the shares (A19).
+vsi <- OUTC("a19_uncertainty", "variance_share_intervals.csv")
 si5 <- c(
-  "\\begin{tabular}{lcccc}", "\\toprule",
-  "Outcome & Component & Variance & Share (\\%) & AIC (ML) \\\\",
+  "\\begin{tabular}{lccccc}", "\\toprule",
+  "Outcome & Component & Variance & Share (\\%) & 95\\% CI of share (\\%) & AIC (ML) \\\\",
   "\\midrule",
   apply(nm, 1, function(r) {
-    sprintf("%s & %s & %.4f & %.1f & %s \\\\",
+    v <- vsi %>% filter(outcome == r[["outcome"]], component == r[["component"]])
+    stopifnot(nrow(v) <= 1)
+    if (nrow(v) == 1) stopifnot(abs(v$estimate - as.numeric(r["proportion_pct"])) < 0.05)
+    sprintf("%s & %s & %.4f & %.1f & %s & %s \\\\",
             r[["outcome"]],
             recode(r[["component"]], Subject = "Listener",
                    Stimulus = "Recording", Residual = "Residual",
                    Total = "Total"),
             as.numeric(r["variance"]), as.numeric(r["proportion_pct"]),
+            if (nrow(v) == 1) sprintf("[%.1f, %.1f]", v$lo, v$hi) else "--",
             sprintf("%.3f", as.numeric(r["AIC_ML"])))
   }),
   "\\bottomrule", "\\end{tabular}")
@@ -316,7 +329,10 @@ wtab(si5, "si_null.tex")
 sens <- OUTC("a11_adopted_models", "si_sensitivity_specifications.csv")
 opt <- OUTC("a12_exhaustive_selection", "si_grid_optima_rows.csv")
 fx_short <- function(s) fx_tex(s)
-mod_lab <- function(m) gsub("\\b2nd\\b", "second", fx_tex(m), perl = TRUE)
+mod_lab <- function(m) {
+  m <- sub("ISOE main (one per layer, adopted)", "ISOE main (adopted)", m, fixed = TRUE)
+  gsub("\\b2nd\\b", "second", fx_tex(m), perl = TRUE)
+}
 sensrow <- function(model, k, terms, aic, r2, vif, ns) {
   sprintf("%s & %d & %s & %.3f & %.1f\\%% & %.2f & %d \\\\",
           mod_lab(model), k, fx_short(terms), aic, r2, vif, ns)
@@ -405,28 +421,39 @@ blk <- function(sp, label) {
 }
 si9 <- c(
   "\\begin{tabular}{llccc}", "\\toprule",
-  "Driver & Attribute & Standardised $\\beta$ & $p$ & $q$ \\\\",
+  "Predictor & Attribute & Standardised $\\beta$ & $p$ & $q$ \\\\",
   "\\midrule",
-  blk("ISOP_spec", "ISOP driver set (3 drivers $\\times$ 8 attributes; BH-FDR family of 24)"),
+  blk("ISOP_spec", "ISOP predictor set (3 predictors $\\times$ 8 attributes; BH-FDR family of 24)"),
   "\\addlinespace",
-  blk("ISOE_spec", "ISOE driver set (5 drivers $\\times$ 8 attributes; BH-FDR family of 40)"),
+  blk("ISOE_spec", "ISOE predictor set (5 predictors $\\times$ 8 attributes; BH-FDR family of 40)"),
   "\\bottomrule", "\\end{tabular}")
 wtab(si9, "si_dimensions.tex")
 
 # --- S: moderation / nonlinearity (A14) --------------------------------------
 mo <- OUTC("a14_moderation_nonlinearity", "moderation_tests.csv")
-MOLAB <- c(ISOP_LAeqxType2 = "ISOP: $L_{\\mathrm{Aeq}}$ $\\times$ Type 2 natural-and-music share",
-           ISOP_LAeq2 = "ISOP: $L_{\\mathrm{Aeq}}^2$",
-           ISOE_FlucxType1 = "ISOE: ($L_{\\mathrm{A10}}-L_{\\mathrm{A90}}$) $\\times$ Type 1 functional-sound share",
-           ISOE_Fluc2 = "ISOE: ($L_{\\mathrm{A10}}-L_{\\mathrm{A90}}$)$^2$")
+MOLAB <- c(ISOP_LAeqxType2 = "$L_{\\mathrm{Aeq}}$ $\\times$ Type 2 share",
+           ISOP_LAeq2 = "$L_{\\mathrm{Aeq}}^2$",
+           ISOE_FlucxType1 = "($L_{\\mathrm{A10}}-L_{\\mathrm{A90}}$) $\\times$ Type 1 share",
+           ISOE_Fluc2 = "($L_{\\mathrm{A10}}-L_{\\mathrm{A90}}$)$^2$")
+# Revision 1: REML coefficient of each added term with its Satterthwaite t
+# interval (A19), printed in units of 10^-3.
+moi <- OUTC("a19_uncertainty", "moderation_intervals.csv")
+morow <- function(oc) apply(mo %>% filter(outcome == oc), 1, function(r) {
+  m <- moi %>% filter(id == r[["id"]])
+  stopifnot(nrow(m) == 1, abs(m$dAIC - as.numeric(r[["dAIC"]])) < 1e-6)
+  sprintf("%s & $+$%.2f & %.2f & %s & %s & %s %s \\\\", MOLAB[r[["id"]]],
+          as.numeric(r[["dAIC"]]), as.numeric(r[["chisq"]]),
+          fp(as.numeric(r[["p_lrt"]])), fq(as.numeric(r[["q"]])),
+          fnum("%.3f", 1000 * m$est),
+          ci_tex(1000 * m$CI_low, 1000 * m$CI_high, "%.3f"))
+})
 si10 <- c(
-  "\\begin{tabular}{lcccc}", "\\toprule",
-  "Added term & $\\Delta$AIC & $\\chi^2$(1) & $p$ (LRT) & $q$ \\\\",
+  "\\begin{tabular}{lccccc}", "\\toprule",
+  "Added term & $\\Delta$AIC & $\\chi^2$(1) & $p$ (LRT) & $q$ & $B$ [95\\% CI] ($\\times 10^{-3}$) \\\\",
   "\\midrule",
-  apply(mo, 1, function(r)
-    sprintf("%s & $+$%.2f & %.2f & %s & %s \\\\", MOLAB[r[["id"]]],
-            as.numeric(r[["dAIC"]]), as.numeric(r[["chisq"]]),
-            fp(as.numeric(r[["p_lrt"]])), fq(as.numeric(r[["q"]])))),
+  "\\multicolumn{6}{l}{\\emph{ISOP adopted model}} \\\\", morow("ISOP"),
+  "\\addlinespace",
+  "\\multicolumn{6}{l}{\\emph{ISOE adopted model}} \\\\", morow("ISOE"),
   "\\bottomrule", "\\end{tabular}")
 wtab(si10, "si_moderation.tex")
 
@@ -450,5 +477,125 @@ si11 <- c(
             as.numeric(r[["abs_err_ISOE"]]))),
   "\\bottomrule", "\\end{tabular}")
 wtab(si11, "si_loso.tex")
+
+# =============================================================================
+# Revision 1 — sensitivity tables from A17 and A18
+# =============================================================================
+# --- S: validation sensitivity (A18) ------------------------------------------
+cvs <- OUTC("a18_validation_sensitivity", "cv_summary.csv")
+cvr <- OUTC("a18_validation_sensitivity",
+            "conditional_site_bootstrap_ranges.csv") %>%
+  filter(metric == "predictive_R2")
+CVLAB <- c(
+  adopted = "Adopted specification, leave-one-recording-out",
+  acoustic_only = "Adopted specification without the source share",
+  site_adopted = "Adopted specification, leave-one-site-out",
+  strict_full_selected_fixed = "Strict rule, selected on the full data and fixed",
+  strict_fold_reselected = "Strict rule, re-selected within each training fold",
+  temporal_aic_full_selected_fixed = "Temporal-AIC rule, selected on the full data and fixed",
+  temporal_aic_fold_reselected = "Temporal-AIC rule, re-selected within each training fold",
+  null = "Null model, leave-one-recording-out",
+  site_null = "Null model, leave-one-site-out")
+stopifnot(setequal(names(CVLAB), unique(cvs$variant)))
+cvcell <- function(oc, v) {
+  d <- cvs %>% filter(outcome == oc, variant == v)
+  g <- cvr %>% filter(outcome == oc, variant == v)
+  stopifnot(nrow(d) == 1, nrow(g) <= 1)
+  sprintf("%s & %s & %s & %.3f", fnum("%.2f", d$r), fnum("%.2f", d$predictive_R2),
+          if (nrow(g) == 1) ci_tex(g$lo, g$hi, "%.2f") else "--", d$rmse)
+}
+si12 <- c(
+  "\\begin{tabular}{lcccccccc}", "\\toprule",
+  " & \\multicolumn{4}{c}{ISOP} & \\multicolumn{4}{c}{ISOE} \\\\",
+  "\\cmidrule(lr){2-5}\\cmidrule(lr){6-9}",
+  "Validation scheme & $r$ & $R^2_{\\mathrm{pred}}$ & Range & RMSE & $r$ & $R^2_{\\mathrm{pred}}$ & Range & RMSE \\\\",
+  "\\midrule",
+  sapply(names(CVLAB), function(v)
+    sprintf("%s & %s & %s \\\\", CVLAB[[v]], cvcell("ISOP", v), cvcell("ISOE", v))),
+  "\\bottomrule", "\\end{tabular}")
+wtab(si12, "si_validation.tex")
+
+# --- S: disjoint-listener source check (A17) ----------------------------------
+sps <- OUTC("a17_source_sensitivity", "split_summary.csv")
+SPL <- list(c("ISOP", "Type2_SNS"), c("ISOE", "Type1_AFS"))
+splrow <- function(s) {
+  full <- fci %>% filter(outcome == s[1], term == s[2])
+  c(sprintf("\\multicolumn{4}{l}{\\emph{%s: %s (full-sample $B$ = %s)}} \\\\", s[1],
+            TERM_TEX[[s[2]]], fnum("%.4f", full$B)),
+    sapply(c("same_half", "disjoint"), function(m) {
+      d <- sps %>% filter(outcome == s[1], mode == m)
+      stopifnot(nrow(d) == 1, d$n == 2000, d$failures == 0, d$singular == 0)
+      sprintf("%s & %s & %s & %.0f \\\\",
+              ifelse(m == "same_half", "Annotations from the rating panel itself",
+                     "Annotations from the other panel"),
+              fnum("%.4f", d$median), ci_tex(d$lo, d$hi), d$expected_sign_pct)
+    }))
+}
+si13 <- c(
+  "\\begin{tabular}{lccc}", "\\toprule",
+  "Source of the share & Median $B$ & 2.5th--97.5th percentile & Adopted sign (\\%) \\\\",
+  "\\midrule", splrow(SPL[[1]]), "\\addlinespace", splrow(SPL[[2]]),
+  "\\bottomrule", "\\end{tabular}")
+wtab(si13, "si_split.tex")
+
+# --- S: compositional form of the source term (A17) ---------------------------
+cmo <- OUTC("a17_source_sensitivity", "composition_models.csv")
+cco <- OUTC("a17_source_sensitivity", "composition_coefficients.csv")
+sst <- OUTC("a17_source_sensitivity", "second_share_tests.csv")
+FOCAL <- list(ISOP = c(raw = "Type2_SNS", ilr = "z1",
+                       rawlab = "Type 2 share (Type 3 as reference)",
+                       ilrlab = "Balance of Type 2 against Types 1 and 3"),
+              ISOE = c(raw = "Type1_AFS", ilr = "z2",
+                       rawlab = "Type 1 share (Type 3 as reference)",
+                       ilrlab = "Balance of Type 1 against Type 3"))
+comprow <- function(oc) {
+  f <- FOCAL[[oc]]
+  raw_m <- cmo %>% filter(outcome == oc, variant == "omit_Type3_DCS")
+  raw_c <- cco %>% filter(outcome == oc, variant == "raw_Type3_reference", term == f[["raw"]])
+  tst <- sst %>% filter(outcome == oc)
+  stopifnot(nrow(raw_m) == 1, nrow(raw_c) == 1, nrow(tst) == 1)
+  c(sprintf("%s & Two raw shares & %s & %s & %s & %s & %s & %s \\\\", oc,
+            fnum("%+.2f", raw_m$delta_vs_adopted), fp(tst$p), fq(tst$q),
+            f[["rawlab"]], fnum("%.4f", raw_c$B), ci_tex(raw_c$lo, raw_c$hi)),
+    sapply(c("0.1", "0.5", "1"), function(k) {
+      v <- paste0("ilr_count_plus_", k)
+      m <- cmo %>% filter(outcome == oc, variant == v)
+      cf <- cco %>% filter(outcome == oc, variant == v, term == f[["ilr"]])
+      stopifnot(nrow(m) == 1, nrow(cf) == 1)
+      sprintf("%s & Log-ratio balances, counts $+$%s & %s & -- & -- & %s & %s & %s \\\\", oc, k,
+              fnum("%+.2f", m$delta_vs_adopted), f[["ilrlab"]],
+              fnum("%.4f", cf$B), ci_tex(cf$lo, cf$hi))
+    }))
+}
+si14 <- c(
+  "\\begin{tabular}{llccclcc}", "\\toprule",
+  "Outcome & Form of the source term & $\\Delta$AIC & $p$ (LRT) & $q$ & Focal term & $B$ & 95\\% CI \\\\",
+  "\\midrule", comprow("ISOP"), "\\addlinespace", comprow("ISOE"),
+  "\\bottomrule", "\\end{tabular}")
+si14 <- gsub("$+$-", "$-$", gsub("& \\+", "& $+$", si14), fixed = TRUE)
+wtab(si14, "si_composition.tex")
+
+# --- S: leave-one-recording-out stability of the adopted coefficients (A18) ---
+dls <- OUTC("a18_validation_sensitivity", "deletion_coefficient_summary.csv")
+DORD <- list(ISOP = c("LAeq", "T50", "Type2_SNS"),
+             ISOE = c("LCLA", "T50", "AI50", "LA10LA90", "Type1_AFS"))
+delrow <- function(oc) sapply(DORD[[oc]], function(tm) {
+  d <- dls %>% filter(outcome == oc, term == tm)
+  full <- fci %>% filter(outcome == oc, term == tm)
+  stopifnot(nrow(d) == 1, nrow(full) == 1, d$n == 36)
+  same <- if (full$B > 0) d$positive else d$negative
+  sprintf("%s & %s & %s & %s & %d/36 & %d/36 & %s \\\\", TERM_TEX[[tm]],
+          fnum("%.4f", full$B), fnum("%.4f", d$min_B), fnum("%.4f", d$max_B),
+          same, d$nominal_p_below_05, fp(d$max_p))
+})
+si15 <- c(
+  "\\begin{tabular}{lcccccc}", "\\toprule",
+  "Term & Full $B$ & Min.\\ $B$ & Max.\\ $B$ & Sign kept & $p < 0.05$ & Max.\\ $p$ \\\\",
+  "\\midrule",
+  "\\multicolumn{7}{l}{\\emph{ISOP adopted model}} \\\\", delrow("ISOP"),
+  "\\addlinespace",
+  "\\multicolumn{7}{l}{\\emph{ISOE adopted model}} \\\\", delrow("ISOE"),
+  "\\bottomrule", "\\end{tabular}")
+wtab(si15, "si_deletion.tex")
 
 cat("All table fragments written to", TAB, "\n")

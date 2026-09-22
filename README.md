@@ -1,4 +1,4 @@
-R code for reproducing the statistical analyses, figures and tables for the manuscript "Layered acoustic and semantic drivers of perceived pleasantness and eventfulness in transport-hub soundscapes".
+R code for reproducing the statistical analyses, figures and tables for the manuscript "Acoustic and semantic correlates of perceived pleasantness and eventfulness in transport-hub soundscapes".
 
 ## Requirements
 
@@ -13,7 +13,7 @@ R code for reproducing the statistical analyses, figures and tables for the manu
                      "performance", "psych", "emmeans"))
   ```
 
-- No non-standard hardware is required. A complete run takes about one to two minutes on a normal desktop; the exhaustive model grid accounts for most of it and uses `parallel::mclapply`, so it runs single-threaded on Windows and is correspondingly slower there.
+- No non-standard hardware is required. The original display items (A01–A15) take about one to two minutes on a normal desktop. The three sensitivity modules added at revision (A17–A19) fit several thousand mixed models and take roughly half an hour to an hour more. A12, A17 and A18 use `parallel::mclapply`, so they run single-threaded on Windows and are correspondingly slower there.
 
 ## Data
 
@@ -32,9 +32,9 @@ The 36 audio excerpts themselves are not part of the deposit. Every indicator us
 - `run_all.R` — master script: runs every analysis module, then builds every manuscript display item.
 - `code/load_data.R` — single data entry: maps each analysis table to its workbook sheet and reads it with `col_types = "text"` plus a CSV round-trip, so column types match the working pipeline exactly.
 - `code/helpers.R` — shared data entry, the four indicator-layer definitions, and the crossed random-intercept model helpers used by every module.
-- `code/a*.R` — the analysis modules: descriptives (A01), attribute reliability (A02), one-way ANOVA and post-hoc contrasts (A03), indicator–perception correlations (A04), null-model variance decomposition (A05), the adopted specifications and everything reported about them (A11), the exhaustive one-indicator-per-layer model grid (A12), the dimension-level anatomy of the adopted driver sets (A13), the pre-specified moderation and curvature tests (A14), and leave-one-recording-out cross-validation (A15).
+- `code/a*.R` — the analysis modules: descriptives (A01), attribute reliability (A02), one-way ANOVA and post-hoc contrasts (A03), indicator–perception correlations (A04), null-model variance decomposition (A05), the adopted specifications and everything reported about them (A11), the exhaustive one-indicator-per-layer model grid (A12), the dimension-level anatomy of the adopted driver sets (A13), the pre-specified moderation and curvature tests (A14), leave-one-recording-out cross-validation (A15), the disjoint-listener-panel and compositional-form checks of the source shares (A17), the validation-scheme sensitivity, site hold-out, recording-deletion and grid checks (A18), and the interval estimates for fixed effects, interaction terms and variance shares (A19).
 - `code/build_figures.R` — Figures 1–5 and Supplementary Figures S1–S2.
-- `code/build_tables.R` — Tables 1–3 and Supplementary Tables S1–S11 (LaTeX fragments).
+- `code/build_tables.R` — Tables 1–3 and Supplementary Tables S1–S15 (LaTeX fragments).
 
 ## Usage
 
@@ -47,7 +47,7 @@ Rscript run_all.R
 Outputs are written to:
 
 - `output/figures/` — Figures 1–5 and Supplementary Figures S1–S2 (PNG, 600 dpi)
-- `output/tables/` — Tables 1–3 and Supplementary Tables S1–S11 (LaTeX fragments; `tab*.tex` main, `si_*.tex` supplementary)
+- `output/tables/` — Tables 1–3 and Supplementary Tables S1–S15 (LaTeX fragments; `tab*.tex` main, `si_*.tex` supplementary)
 - `output/<analysis id>/` — the full regenerated result tables of each analysis module
 
 To keep the console log alongside the outputs:
@@ -60,17 +60,18 @@ Rscript run_all.R 2>&1 | tee output/run_log.txt
 
 ## Verification
 
-Run against the deposited workbook, this pipeline reproduces the manuscript's display items **byte-identically**: all 7 figures and all 14 LaTeX table fragments match the values in the paper exactly. Nothing in the pipeline is random, so no seed is needed.
+Run against the deposited workbook, this pipeline reproduces the manuscript's display items **byte-identically**: all 7 figures and all 18 LaTeX table fragments match the values in the paper exactly. The original modules contain nothing random. The three revision modules draw random listener splits (A17), site resamples (A18) and parametric-bootstrap samples (A19) under fixed seeds set in the scripts, and the bootstrap runs serially, so their outputs also regenerate exactly.
 
 Workbook cells are capped at 15 significant digits, so the unrounded full-precision columns of a few module result tables differ from the working pipeline in their last digits. The largest such difference is 2.2e-5 on a Satterthwaite degrees-of-freedom value of about 32 (relative 7e-7), which propagates from a ~1e-15 input perturbation through the numerical derivatives of that estimator; every reported quantity is printed to far fewer digits and none of them moves.
 
 ## Notes
 
-- Every module is self-contained: it reads the deposited tables through `code/helpers.R` and writes only into its own `output/` folder, so modules can be run individually and in any order.
+- Every module reads the deposited tables through `code/helpers.R` and writes only into its own `output/` folder. A18 also reads the A12 grid and the A15 summary, and A19 reads the A14 test table, so those three run after the modules they depend on; the others can be run individually and in any order.
 - The two adopted models are crossed random-intercept models with listener and recording intercepts, fitted by ML for model comparison (AIC, likelihood-ratio tests) and by REML for the reported coefficients and variance components, with Satterthwaite degrees of freedom.
 - The main models are built by a single-pass ordered screen over the four layers. A12 re-derives the optimum without that path dependence by fitting all 1,512 one-indicator-per-layer combinations per outcome; the two grid optima are reported as rows of Supplementary Table S3.
 - A02 computes the attribute reliabilities in both orientations. The manuscript reports Cronbach's alpha and ICC(2,1) from the listener-as-case layout and the ICC(2,57) figures from its transpose, which is the inter-rater reliability of a recording's mean.
-- False-discovery-rate control (Benjamini–Hochberg) is applied within the declared families of A13 and A14 only; the correlation screen of Figure 3 is descriptive and carries no significance marks.
+- False-discovery-rate control (Benjamini–Hochberg) is applied within the declared families of A13 and A14 and to the two second-share tests of A17; the correlation screen of Figure 3 is descriptive and carries no significance marks.
+- The automatic screens of A18 are fixed rules (AIC plus a 1-df likelihood-ratio test at 0.05, or AIC alone for the temporal layer) applied inside every training fold. They do not reproduce the judgement-based choices of the original screen; they measure how much the selection step conditions the cross-validated prediction.
 
 ## License
 

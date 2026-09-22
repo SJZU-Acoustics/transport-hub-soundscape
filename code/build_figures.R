@@ -115,7 +115,7 @@ f1 <- ggplot() + xlim(0, 100) + ylim(0, 62) + theme_void() +
   txt(18, 16.2, "10th\u201390th percentile ranges of the\nlevel and psychoacoustic families",
       size = 2.2) +
   box(2, 34, 2.5, 11.5, fill = pal_layer[4]) +
-  txt(18, 9.1, "Sound-source semantics", size = 2.5, face = "bold") +
+  txt(18, 9.1, "Listener-annotated sources", size = 2.3, face = "bold") +
   txt(18, 5.7, "shares of functional (Type 1), natural+music\n(Type 2), communication (Type 3) sounds", size = 2.15) +
   # outcome boxes
   box(66, 98.5, 27, 42, fill = "white", lwd = 0.5) +
@@ -288,7 +288,7 @@ ls <- read_csv(OUTC("a15_predictive_validity", "loso_summary.csv"),
 mk_loso <- function(oc, lims) {
   s <- filter(ls, outcome == oc)
   ocl <- sub("ISOP", "ISO-P", sub("ISOE", "ISO-E", oc))
-  ann <- sprintf('italic(r) == "%.2f"~~italic(R)^2 == "%.2f"', s$r_stim, s$R2_stim)
+  ann <- sprintf('italic(r) == "%.2f"~~italic(r)^2 == "%.2f"', s$r_stim, s$R2_stim)
   ggplot(filter(lo, outcome == oc), aes(obs_mean, pred_mean)) +
     geom_abline(slope = 1, intercept = 0, linetype = "22", linewidth = 0.35,
                 colour = "grey55") +

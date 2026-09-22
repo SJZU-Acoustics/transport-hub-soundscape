@@ -13,7 +13,7 @@ R code for reproducing the statistical analyses, figures and tables for the manu
                      "performance", "psych", "emmeans"))
   ```
 
-- No non-standard hardware is required. The original display items (A01–A15) take about one to two minutes on a normal desktop. The three sensitivity modules added at revision (A17–A19) fit several thousand mixed models and take roughly half an hour to an hour more. A12, A17 and A18 use `parallel::mclapply`, so they run single-threaded on Windows and are correspondingly slower there.
+- No non-standard hardware is required. The original display items (A01–A15) take about one to two minutes on a normal desktop. The three sensitivity modules added at revision (A17–A19) fit several thousand mixed models and take about two to three minutes more (a complete run took 3.4 minutes on an Apple M3 MacBook Air). A12, A17 and A18 use `parallel::mclapply`, so they run single-threaded on Windows and are correspondingly slower there.
 
 ## Data
 
